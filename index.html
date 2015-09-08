@@ -1,0 +1,178 @@
+<!--   http://webdocuments.blogspot.in/2015/01/jquery-json-html5-local-storage-crud.html  -->
+<html>
+         <head>
+    			<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+    			<script src="http://code.jquery.com/jquery-1.11.1.min.js"></script>
+         </head>
+    <body>
+        <form id="frmItem">
+            <ul style="list-style: none;">
+                <li> <label for="txtID"></label> <input type="hidden" id="txtID"/> <input type="hidden" id="totaltickets" value='5'/></li>
+                <li> <label for="txtName">Name:</label> <input type="text" id="txtName"/> </li>
+                <li> <label for="txtMobile">Mobile:</label> <input type="text" id="txtMobile" maxlength='10'/> </li>
+                <li> <label for="txtTicket">Tickets:</label> <select  id="txtTicket"></select> </li>
+                <li> 
+                	<button value="Save" id="btnSave"/>Save</button>
+                </li> 
+           </ul>
+        </form>
+        <table id="tblList" width="30%" border="1" cellpadding="2" cellspacing="0"></table>
+    </body>
+            
+    </html>
+
+<script>
+
+
+var operation = "A"; 
+var selected_index = -1; 
+var tbCustomers = localStorage.getItem("tbCustomers");
+tbCustomers = JSON.parse(tbCustomers); 
+if(tbCustomers == null) {tbCustomers = [];}
+$("#txtID").val(tbCustomers.length+1);
+
+function DropdownOptions() {
+    var tval = 0;
+
+    for(var i in tbCustomers){
+        var cli = JSON.parse(tbCustomers[i]);
+        tval = parseInt(tval) + parseInt(cli.Ticket);
+    }
+
+    var tickets = $('#totaltickets').val() - tval;
+
+    var opt = '';
+    opt += "<option value=''>Select</option>";
+    for (var i = 1; i <= tickets; i++) {
+        opt += "<option value='"+i+"'>"+i+"</option>";
+    };
+    $('#txtTicket').html(opt);
+}
+
+function Add(){
+    var cust = JSON.stringify({
+        ID :$("#txtID").val(),
+        Name : $("#txtName").val(),
+        Mobile : $("#txtMobile").val(),
+        Ticket : $("#txtTicket").val()
+    });
+    tbCustomers.push(cust);
+    localStorage.setItem("tbCustomers", JSON.stringify(tbCustomers));
+    return true;
+}
+
+function Edit(){
+    tbCustomers[selected_index] = JSON.stringify({
+        ID : $("#txtID").val(),
+        Name : $("#txtName").val(),
+        Mobile : $("#txtMobile").val(),
+        Ticket : $("#txtTicket").val()
+    });
+    localStorage.setItem("tbCustomers", JSON.stringify(tbCustomers));
+    DropdownOptions();
+    alert("Customer was edited successfully.");
+    operation = "A";
+    return true;
+}
+
+function Delete(){
+    tbCustomers.splice(selected_index, 1);
+    localStorage.setItem("tbCustomers", JSON.stringify(tbCustomers));
+    DropdownOptions();
+    alert("Customer deleted.");
+}
+
+$(document).on( "submit", "#frmItem", function(){    
+    val = FormValidate(); 
+    if(val === 1) {
+        return false;
+    }
+    else {
+        if(operation == "A")
+            return Add();
+        else
+            return Edit();   
+    }     
+});
+
+$(document).on( "click", ".btnEdit", function(){
+    operation = "E";
+    selected_index = parseInt($(this).attr("alt").replace("Edit", ""));
+    var cli = JSON.parse(tbCustomers[selected_index]);
+    $("#txtID").val(cli.ID);
+    $("#txtName").val(cli.Name);
+    $("#txtMobile").val(cli.Mobile);
+    $("#txtTicket").val(cli.Ticket);
+    $("#txtID").attr("readonly","readonly");
+    $("#txtName").focus();
+});
+
+$(document).on( "click", ".btnDelete", function(e){
+    selected_index = parseInt($(this).attr("alt").replace("Delete", ""));
+    Delete();
+    List();
+});
+
+$(document).bind("onload",List());
+ 
+function List(){        
+    $("#tblList").html("");
+    $("#tblList").html(
+        "<thead>"+
+        "<tr>"+
+        "<th>Name</th>"+
+        "<th>Mobile</th>"+
+        "<th>Ticket</th>"+
+        "<th>Action</th>"+
+        "</tr>"+
+        "</thead>"+
+        "<tbody>"+
+        "</tbody>" );
+    for(var i in tbCustomers){
+        var cli = JSON.parse(tbCustomers[i]);
+        $("#tblList tbody").append("<tr>"+
+        "<td>"+
+        cli.Name+"</td>"+"<td>"+
+        cli.Mobile+"</td>"+"<td>"+
+        cli.Ticket+"</td>"+
+        "<td><img src='edit.png' alt='Edit"+i+"' class='btnEdit'/>"+
+        "<img src='delete.png' alt='Delete"+i+"' class='btnDelete'/>"+
+        "</td>" +"</tr>");
+    }
+}
+
+function FormValidate() {
+    var vflag       = 0;
+    var txtName     =   $('#txtName').val();
+    var txtMobile   =   $('#txtMobile').val();
+    var txtTicket   =   $('#txtTicket').val();
+    if(txtName == '') {
+        alert('Please enter name');
+        vflag = 1; 
+    }
+    else if(txtMobile == '') {
+        alert('Please enter Mobile no.');
+        vflag = 1
+    }
+    else if(txtTicket == '') {
+        alert('Please select Ticket');
+        vflag = 1; 
+    }
+    else if(txtName !='' && txtMobile !='' && txtTicket !='') { 
+        var filter = /[0-9-()+]{10,10}/;
+        if (filter.test(txtMobile)) { 
+            vflag = 0;
+        }
+        else { 
+            alert('Please enter valid Mobile no.');
+            vflag = 1;
+        }
+    }
+
+    return vflag;
+}
+
+$(function(){
+    DropdownOptions(); 
+});
+</script>
